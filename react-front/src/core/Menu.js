@@ -14,6 +14,10 @@ const Menu = ({ history }) => (
                 <Link className="nav-link" style={isActive(history, "/")} to="/">Home</Link>
             </li>
 
+            <li className="nav-item">
+                <Link className="nav-link" style={isActive(history, "/users")} to="/users">Users</Link>
+            </li>
+
             {!isAuthenticated() && (
                 <>
                     <li className="nav-item">
@@ -28,13 +32,21 @@ const Menu = ({ history }) => (
             {isAuthenticated() && (
                 <>
                     <li className="nav-item">
-                        <a className="nav-link" style={isActive(history, "/signup"), {cursor: "pointer", color: "#ffffff"}} onClick={() => signout(() => history.push('/'))} >Sign Out</a>
+                        <span 
+                        className="nav-link" 
+                        style={
+                            (isActive(history, "/signup"), 
+                            {cursor: "pointer", color: "#ffffff"}) 
+                        }
+                        onClick={() => signout(() => history.push('/'))} >Sign Out</span>
                 </li>
                 <li className="nav-item">
-                    <a className="nav-link">{isAuthenticated().user.name}</a>
+                    <Link to={`/user/${isAuthenticated().user._id}`} style={isActive(history, `/user/${isAuthenticated().user._id}`)} className="nav-link">
+                        {`${isAuthenticated().user.name}'s profile`}
+                    </Link>
                 </li>
             </>
-            )}
+        )}
         </ul>
     </div >
 );

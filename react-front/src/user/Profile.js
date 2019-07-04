@@ -4,15 +4,41 @@ import { Redirect, Link } from 'react-router-dom';
 import { read } from './apiUser';
 import DefaultProfile from '../images/avatar.jpg';
 import DeleteUser from './DeleteUser';
+import FollowProfileButton from './FollowProfileButton';
+import ProfileTabs from './ProfileTabs'
 
 class Profile extends Component {
 
     constructor() {
         super()
         this.state = {
-            user: "",
-            redirectToSignin: false
+            user: { following: [], followers: [] },
+            redirectToSignin: false,
+            following: false,
+            error: ''
         }
+    }
+
+    checkFollow = user => {
+        const jwt = isAuthenticated()
+        const match = user.followers.find(follower => {
+            return follower._id === jwt.user._id
+        })
+        return match
+    }
+
+    clickFollowButton = callApi => {
+        const userId = isAuthenticated().user._id;
+        const token = isAuthenticated().token;
+        callApi(userId, token, this.state.user._id)
+            .then(data => {
+                if (data.error) {
+                    this.setState({ error: data.error })
+                }
+                else {
+                    this.setState({ user: data, following: !this.state.following })
+                }
+            })
     }
 
     init = (userId) => {
@@ -23,7 +49,8 @@ class Profile extends Component {
                     this.setState({ redirectToSignin: true });
                 }
                 else {
-                    this.setState({ user: data });
+                    let following = this.checkFollow(data)
+                    this.setState({ user: data, following });
                 }
             })
     }
@@ -41,6 +68,9 @@ class Profile extends Component {
     render() {
         const { redirectToSignin, user } = this.state;
         if (redirectToSignin) return <Redirect to="/signin" />
+
+        const photoUrl = user._id ? `${process.env.REACT_APP_API_URL}/user/photo/${user._id}?${new Date().getTime()}` : DefaultProfile;
+
         return (
             <div className="container">
                 <h2 className="mt-5 mb-5">
@@ -48,11 +78,7 @@ class Profile extends Component {
                         </h2>
                 <div className="row">
                     <div className="col-md-6">
-                        <img className="card-img-top"
-                            src={DefaultProfile}
-                            alt={user.name}
-                            style={{ width: '100%', height: '17vw', objectFit: 'cover' }}
-                        />
+                        <img style={{ height: "200px", width: "auto" }} className="img-thumbnail" src={photoUrl} onError={i => (i.target.src = `${DefaultProfile}`)} alt={user.name} />
 
                     </div>
                     <div className="col-md-6">
@@ -62,7 +88,7 @@ class Profile extends Component {
                             <p>{`Joined : ${new Date(user.created).toDateString()}`}</p>
                         </div>
                         {isAuthenticated().user &&
-                            isAuthenticated().user._id === user._id && (
+                            isAuthenticated().user._id === user._id ? (
                                 <div className="d-inline-block">
                                     <Link
                                         className="btn btn-raised btn-success mr-5"
@@ -70,9 +96,19 @@ class Profile extends Component {
                                     >
                                         Edit Profile
                                     </Link>
-                                    <DeleteUser userId={user._id}/>
+                                    <DeleteUser userId={user._id} />
                                 </div>
+                            ) : (
+                                <FollowProfileButton following={this.state.following} onButtonClick={this.clickFollowButton} />
                             )}
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col md-12 mt-5 mb-5">
+                        <hr />
+                        <p className="lead">{user.about}</p>
+                        <hr />
+                        <ProfileTabs followers={user.followers} following={user.following} />
                     </div>
                 </div>
             </div>

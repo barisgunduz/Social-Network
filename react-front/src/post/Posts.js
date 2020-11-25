@@ -48,7 +48,7 @@ class Posts extends Component {
                                     <Link to={`${posterId}`}>
                                         {posterName}
                                         {" "}
-                                    </Link>
+                                    </Link> 
                                     on {new Date(post.created).toDateString()}
                                 </p>
                                 <Link to={`/posts/${post._id}`} className="btn btn-raised btn-primary btn-sm">
